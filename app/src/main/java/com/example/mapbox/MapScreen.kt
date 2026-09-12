@@ -1,28 +1,41 @@
 package com.example.mapbox
 
+import android.Manifest
 import android.app.Activity
+import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.mapbox.geojson.Point
+import androidx.core.content.ContextCompat
+import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
+import com.mapbox.maps.plugin.locationcomponent.location
 import kotlinx.coroutines.delay
 
 @Composable
 fun MapScreen() {
 
     val context = LocalContext.current
+
 
     var backPressedOnce by remember {
         mutableStateOf(false)
@@ -50,25 +63,92 @@ fun MapScreen() {
         }
     }
 
-
-    MapboxMap(
-        Modifier.fillMaxSize(),
-        mapViewportState = rememberMapViewportState {
-            setCameraOptions {
-                zoom(2.0)
-                center(Point.fromLngLat(-98.0, 39.5))
-                pitch(0.0)
-                bearing(0.0)
-            }
-        },
-        scaleBar = {
-            ScaleBar(Modifier.padding(top = 60.dp))
-        },
-        logo = {
-            Logo(Modifier.padding(bottom = 40.dp))
-        },
-        attribution = {
-            Attribution(Modifier.padding(bottom = 40.dp))
+    val mapViewportState = rememberMapViewportState {
+        setCameraOptions {
+            zoom(2.0)
+            pitch(0.0)
+            bearing(0.0)
         }
-    )
+    }
+
+    var hasLocationPermission by remember {
+
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permission ->
+        hasLocationPermission =
+            permission[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                    permission[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+    }
+
+
+
+
+    Box(modifier = Modifier.fillMaxSize()) {
+
+
+        MapboxMap(
+            Modifier.fillMaxSize(),
+            mapViewportState = mapViewportState,
+            scaleBar = {
+                ScaleBar(
+                    Modifier.padding(60.dp)
+                )
+            },
+            logo = {
+                Logo(Modifier.padding(bottom = 40.dp))
+            },
+            attribution = {
+                Attribution(Modifier.padding(bottom = 40.dp))
+            }
+
+        ) {
+
+            MapEffect(hasLocationPermission) { mapView ->
+                if (hasLocationPermission) {
+                    mapView.location.updateSettings {
+                        enabled = true
+                    }
+                }
+
+            }
+
+        }
+
+        FloatingActionButton(
+            onClick = {
+                if (hasLocationPermission) {
+                    mapViewportState.transitionToFollowPuckState()
+                } else {
+                    permissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        )
+                    )
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(18.dp)
+        ) {
+
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = "My Location"
+            )
+
+        }
+    }
+
+
 }
