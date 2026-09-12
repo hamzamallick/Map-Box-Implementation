@@ -12,8 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,6 +40,13 @@ fun MapScreen() {
 
     val context = LocalContext.current
 
+    var selectedStyle by remember {
+        mutableStateOf(mapStyles[0])
+    }
+
+    var showStyleMenu by remember {
+        mutableStateOf(false)
+    }
 
     var backPressedOnce by remember {
         mutableStateOf(false)
@@ -113,16 +124,66 @@ fun MapScreen() {
 
         ) {
 
-            MapEffect(hasLocationPermission) { mapView ->
+            MapEffect(hasLocationPermission, selectedStyle) { mapView ->
+
+                // for fetching the location
                 if (hasLocationPermission) {
                     mapView.location.updateSettings {
                         enabled = true
                     }
                 }
 
+                // map style
+                mapView.mapboxMap.loadStyle(
+                    selectedStyle.uri
+                )
+
             }
 
         }
+
+        FloatingActionButton(
+            onClick = {
+                showStyleMenu = true
+            },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(end = 20.dp, top = 40.dp)
+
+
+        ) {
+
+            Icon(Icons.Default.Map, contentDescription = "")
+        }
+
+        DropdownMenu(
+            expanded = showStyleMenu,
+            onDismissRequest = {
+                showStyleMenu = false
+            }
+        ) {
+
+            mapStyles.forEach { style->
+                DropdownMenuItem(
+                    text = {
+                        Text(style.name)
+                    },
+                    onClick = {
+                        selectedStyle =style
+                        showStyleMenu = false
+                    }
+                )
+            }
+
+
+        }
+
+
+
+
+
+
+
 
         FloatingActionButton(
             onClick = {
@@ -148,6 +209,8 @@ fun MapScreen() {
             )
 
         }
+
+
     }
 
 
