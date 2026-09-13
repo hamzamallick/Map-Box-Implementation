@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.mapbox.screens.HomeScreen
+import com.example.mapbox.screens.MapScreen
 
 
 public class MainActivity : ComponentActivity() {

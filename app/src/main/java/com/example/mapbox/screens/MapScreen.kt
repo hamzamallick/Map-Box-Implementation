@@ -1,4 +1,4 @@
-package com.example.mapbox
+package com.example.mapbox.screens
 
 import android.Manifest
 import android.app.Activity
@@ -12,12 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,11 +25,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.example.mapbox.model.mapStyles
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.plugin.locationcomponent.location
 import kotlinx.coroutines.delay
+import com.example.mapbox.components.MapStyleSelector
+import com.example.mapbox.components.ZoomControls
 
 @Composable
 fun MapScreen() {
@@ -142,47 +141,31 @@ fun MapScreen() {
 
         }
 
-        FloatingActionButton(
-            onClick = {
-                showStyleMenu = true
+        ZoomControls(
+            mapViewportState = mapViewportState,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = 150.dp, end = 20.dp)
+        )
+
+
+        MapStyleSelector(
+            mapStyle = mapStyles,
+            selectedStyle = selectedStyle,
+            onStyleSelected = {
+                selectedStyle = it
+            },
+            showMenu = showStyleMenu,
+            onShowMenuChange = {
+                showStyleMenu = it
             },
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(end = 20.dp, top = 40.dp)
-
-
-        ) {
-
-            Icon(Icons.Default.Map, contentDescription = "")
-        }
-
-        DropdownMenu(
-            expanded = showStyleMenu,
-            onDismissRequest = {
-                showStyleMenu = false
-            }
-        ) {
-
-            mapStyles.forEach { style->
-                DropdownMenuItem(
-                    text = {
-                        Text(style.name)
-                    },
-                    onClick = {
-                        selectedStyle =style
-                        showStyleMenu = false
-                    }
+                .padding(
+                    end = 20.dp,
+                    top = 40.dp
                 )
-            }
-
-
-        }
-
-
-
-
-
-
+        )
 
 
         FloatingActionButton(
@@ -200,7 +183,7 @@ fun MapScreen() {
             },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(18.dp)
+                .padding(bottom = 26.dp, end = 20.dp)
         ) {
 
             Icon(
