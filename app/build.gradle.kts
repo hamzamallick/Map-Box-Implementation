@@ -51,11 +51,19 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    implementation("com.mapbox.maps:android-ndk27:11.30.1")
-    implementation("com.mapbox.extension:maps-compose-ndk27:11.30.1")
+    implementation("com.mapbox.maps:android:11.30.1")
+    implementation("com.mapbox.extension:maps-compose:11.30.1")
 
 
     implementation("androidx.navigation:navigation-compose:2.9.4")
 
     implementation("androidx.compose.material:material-icons-extended")
+
+
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+    implementation("com.mapbox.search:mapbox-search-android:2.30.1")
+    implementation("androidx.startup:startup-runtime:1.2.0")
+
 }

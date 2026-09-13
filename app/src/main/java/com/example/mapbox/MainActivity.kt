@@ -9,10 +9,11 @@ import androidx.navigation.compose.rememberNavController
 import com.example.mapbox.screens.HomeScreen
 import com.example.mapbox.screens.MapScreen
 
-
 public class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
 
             val navController = rememberNavController()
@@ -21,6 +22,7 @@ public class MainActivity : ComponentActivity() {
                 navController = navController,
                 startDestination = "home"
             ) {
+
                 composable("home") {
                     HomeScreen(
                         onOpenMap = {
@@ -33,7 +35,6 @@ public class MainActivity : ComponentActivity() {
                     MapScreen()
                 }
             }
-
         }
     }
 }

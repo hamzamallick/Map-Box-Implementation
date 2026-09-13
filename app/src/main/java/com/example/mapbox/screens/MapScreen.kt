@@ -3,7 +3,9 @@ package com.example.mapbox.screens
 import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
+import com.mapbox.geojson.Point
 import android.widget.Toast
+import com.example.mapbox.components.GetLocation
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.example.mapbox.components.GetLocation
 import com.example.mapbox.model.mapStyles
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
@@ -32,12 +35,28 @@ import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportS
 import com.mapbox.maps.plugin.locationcomponent.location
 import kotlinx.coroutines.delay
 import com.example.mapbox.components.MapStyleSelector
+import com.example.mapbox.components.MyLocationButton
 import com.example.mapbox.components.ZoomControls
+import com.mapbox.maps.MapView
 
 @Composable
 fun MapScreen() {
 
     val context = LocalContext.current
+
+    var selectedLocation by remember {
+        mutableStateOf<Point?>(null)
+    }
+
+    var locationName by remember {
+        mutableStateOf("")
+    }
+
+    var mapView by remember {
+        mutableStateOf<MapView?>(null)
+    }
+
+
 
     var selectedStyle by remember {
         mutableStateOf(mapStyles[0])
@@ -123,23 +142,70 @@ fun MapScreen() {
 
         ) {
 
-            MapEffect(hasLocationPermission, selectedStyle) { mapView ->
+            MapEffect(hasLocationPermission, selectedStyle) { view ->
+
+                mapView = view
 
                 // for fetching the location
                 if (hasLocationPermission) {
-                    mapView.location.updateSettings {
+                    view.location.updateSettings {
                         enabled = true
                     }
                 }
 
                 // map style
-                mapView.mapboxMap.loadStyle(
+                view.mapboxMap.loadStyle(
                     selectedStyle.uri
                 )
 
             }
 
         }
+
+        mapView?.let { view ->
+
+            GetLocation(
+                mapView = view,
+                onLocationSelected = { point, name ->
+
+                    selectedLocation = point
+                    locationName = name
+                },
+                onLocationCleared = {
+                    selectedLocation = null
+                    locationName =""
+                }
+            )
+        }
+
+        selectedLocation?.let { point ->
+
+            androidx.compose.material3.Card(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 100.dp)
+            ) {
+
+                androidx.compose.foundation.layout.Column(
+                    modifier = Modifier.padding(12.dp)
+                ) {
+
+                    androidx.compose.material3.Text(
+                        text = locationName
+                    )
+
+                    androidx.compose.material3.Text(
+                        text = "Lat: ${point.latitude()}"
+                    )
+
+                    androidx.compose.material3.Text(
+                        text = "Lng: ${point.longitude()}"
+                    )
+                }
+            }
+        }
+
+
 
         ZoomControls(
             mapViewportState = mapViewportState,
@@ -168,30 +234,14 @@ fun MapScreen() {
         )
 
 
-        FloatingActionButton(
-            onClick = {
-                if (hasLocationPermission) {
-                    mapViewportState.transitionToFollowPuckState()
-                } else {
-                    permissionLauncher.launch(
-                        arrayOf(
-                            Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION
-                        )
-                    )
-                }
-            },
+        MyLocationButton(
+            hasLocationPermission = hasLocationPermission,
+            permissionLauncher = permissionLauncher,
+            mapViewportState = mapViewportState,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(bottom = 26.dp, end = 20.dp)
-        ) {
-
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = "My Location"
-            )
-
-        }
+        )
 
 
     }
