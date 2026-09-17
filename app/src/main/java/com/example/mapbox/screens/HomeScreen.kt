@@ -35,7 +35,7 @@ fun HomeScreen(onOpenMap: () -> Unit) {
                 onOpenMap()
             }, modifier = Modifier,
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Gray
+                containerColor = Color.Blue
             )
         ) {
             Text(
