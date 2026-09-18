@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import com.mapbox.geojson.Point
 import android.widget.Toast
+import com.example.mapbox.components.MapSearch
 import com.example.mapbox.components.GetLocation
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -46,6 +47,7 @@ import kotlinx.coroutines.delay
 import com.example.mapbox.components.MapStyleSelector
 import com.example.mapbox.components.MyLocationButton
 import com.example.mapbox.components.ZoomControls
+import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
 
 @Composable
@@ -54,6 +56,10 @@ fun MapScreen() {
     val context = LocalContext.current
 
     var selectedLocation by remember {
+        mutableStateOf<Point?>(null)
+    }
+
+    var searchedLocation by remember {
         mutableStateOf<Point?>(null)
     }
 
@@ -105,6 +111,19 @@ fun MapScreen() {
             zoom(2.0)
             pitch(0.0)
             bearing(0.0)
+        }
+    }
+
+    LaunchedEffect(searchedLocation) {
+
+        searchedLocation?.let { point ->
+
+            mapViewportState.flyTo(
+                CameraOptions.Builder()
+                    .center(point)
+                    .zoom(15.0)
+                    .build()
+            )
         }
     }
 
@@ -168,6 +187,20 @@ fun MapScreen() {
 
             }
 
+        }
+
+        mapView?.let { view ->
+
+            searchedLocation?.let { point ->
+
+                LocationMarker(
+                    mapView = view,
+                    point = point,
+                    onMarkerClick = {
+
+                    }
+                )
+            }
         }
 
         mapView?.let { view ->
@@ -296,6 +329,17 @@ fun MapScreen() {
                 }
             }
         }
+
+        MapSearch(
+            onLocationSelected = { point, name ->
+
+                searchedLocation = point
+
+            },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 20.dp)
+        )
 
 
 

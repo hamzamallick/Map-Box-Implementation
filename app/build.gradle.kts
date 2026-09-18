@@ -68,4 +68,6 @@ dependencies {
 
     implementation("com.google.android.gms:play-services-location:21.3.0")
 
+    implementation("com.mapbox.search:mapbox-search-android:2.30.1")
+
 }
