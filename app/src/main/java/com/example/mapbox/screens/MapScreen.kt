@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.Intent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
@@ -225,9 +226,12 @@ fun MapScreen() {
 
                     Button(onClick = {
 
+                        val latitude = point.latitude()
+                        val longitude = point.longitude()
 
-                        val coordinates =
-                            "${point.latitude()}, ${point.longitude()}"
+                        val mapLink =
+                            "https://www.google.com/maps/search/?api=1&query=$latitude,$longitude"
+
 
                         val clipboard =
                             context.getSystemService(
@@ -236,22 +240,57 @@ fun MapScreen() {
 
                         val clip =
                             ClipData.newPlainText(
-                                "Coordinates",
-                                coordinates
+                                "Location Link",
+                                mapLink
                             )
 
                         clipboard.setPrimaryClip(clip)
 
                         Toast.makeText(
                             context,
-                            "Coordinates copied",
+                            "Location link copied",
                             Toast.LENGTH_SHORT
                         ).show()
 
 
                     }) {
 
-                        Text("Copy Coordinates")
+                        Text("Copy Location Link")
+                    }
+
+                    Button(
+                        onClick = {
+
+                            val latitude = point.latitude()
+                            val longitude = point.longitude()
+
+                            val mapLink =
+                                "https://www.google.com/maps/search/?api=1&query=$latitude,$longitude"
+
+                            val locationText =
+                                "$locationName\n" +
+                                        "Latitude: $latitude\n" +
+                                        "Longitude: $longitude\n" +
+                                        "Map: $mapLink"
+
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(
+                                    Intent.EXTRA_TEXT,
+                                    locationText
+                                )
+                            }
+
+                            context.startActivity(
+                                Intent.createChooser(
+                                    shareIntent,
+                                    "Share Location"
+                                )
+                            )
+                        }
+                    ) {
+
+                        Text("Share Location")
                     }
                 }
             }
