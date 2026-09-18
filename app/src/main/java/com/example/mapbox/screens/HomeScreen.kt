@@ -28,7 +28,7 @@ fun HomeScreen(onOpenMap: () -> Unit) {
 
         Text("Click button to explore the world..!")
 
-        Spacer(Modifier.height(30.dp))
+        Spacer(Modifier.height(40.dp))
 
         Button(
             onClick = {
