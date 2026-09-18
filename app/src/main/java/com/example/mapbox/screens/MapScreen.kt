@@ -12,10 +12,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import android.content.ClipData
+import android.content.ClipboardManager
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.mapbox.components.GetLocation
+import com.example.mapbox.components.LocationMarker
 import com.example.mapbox.model.mapStyles
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
@@ -55,7 +62,6 @@ fun MapScreen() {
     var mapView by remember {
         mutableStateOf<MapView?>(null)
     }
-
 
 
     var selectedStyle by remember {
@@ -173,34 +179,80 @@ fun MapScreen() {
                 },
                 onLocationCleared = {
                     selectedLocation = null
-                    locationName =""
+                    locationName = ""
                 }
             )
         }
 
+        mapView?.let { view ->
+
+            selectedLocation?.let { point ->
+
+                LocationMarker(
+                    mapView = view,
+                    point = point,
+                    onMarkerClick = {
+
+                        selectedLocation = point
+                    }
+                )
+            }
+        }
+
         selectedLocation?.let { point ->
 
-            androidx.compose.material3.Card(
+            Card(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = 100.dp)
             ) {
 
-                androidx.compose.foundation.layout.Column(
+                Column(
                     modifier = Modifier.padding(12.dp)
                 ) {
 
-                    androidx.compose.material3.Text(
+                    Text(
                         text = locationName
                     )
 
-                    androidx.compose.material3.Text(
+                    Text(
                         text = "Lat: ${point.latitude()}"
                     )
 
-                    androidx.compose.material3.Text(
+                    Text(
                         text = "Lng: ${point.longitude()}"
                     )
+
+                    Button(onClick = {
+
+
+                        val coordinates =
+                            "${point.latitude()}, ${point.longitude()}"
+
+                        val clipboard =
+                            context.getSystemService(
+                                android.content.Context.CLIPBOARD_SERVICE
+                            ) as ClipboardManager
+
+                        val clip =
+                            ClipData.newPlainText(
+                                "Coordinates",
+                                coordinates
+                            )
+
+                        clipboard.setPrimaryClip(clip)
+
+                        Toast.makeText(
+                            context,
+                            "Coordinates copied",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+
+                    }) {
+
+                        Text("Copy Coordinates")
+                    }
                 }
             }
         }
