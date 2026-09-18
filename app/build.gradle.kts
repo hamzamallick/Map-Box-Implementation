@@ -66,4 +66,6 @@ dependencies {
     implementation("com.mapbox.search:mapbox-search-android:2.30.1")
     implementation("androidx.startup:startup-runtime:1.2.0")
 
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
 }

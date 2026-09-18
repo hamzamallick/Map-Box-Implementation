@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
+import com.example.mapbox.components.CurrentLocationButton
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
@@ -334,8 +335,23 @@ fun MapScreen() {
                 .padding(bottom = 26.dp, end = 20.dp)
         )
 
+        CurrentLocationButton(
+            context = context,
+            hasLocationPermission = hasLocationPermission,
+            permissionLauncher = permissionLauncher,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(
+                    bottom = 90.dp,
+                    end = 20.dp
+                )
+        )
+
 
     }
 
 
 }
+
+
+// yaha tk hua
