@@ -19,6 +19,9 @@ import android.content.ClipboardManager
 import android.content.Intent
 import com.example.mapbox.components.CurrentLocationButton
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -34,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavHostController
 import com.example.mapbox.components.LocationMarker
 import com.example.mapbox.model.mapStyles
 import com.mapbox.maps.extension.compose.MapEffect
@@ -49,7 +53,9 @@ import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
 
 @Composable
-fun MapScreen() {
+fun MapScreen(
+    navController: NavHostController
+) {
 
     val context = LocalContext.current
 
@@ -60,8 +66,19 @@ fun MapScreen() {
     var searchedLocation by remember {
         mutableStateOf<Point?>(null)
     }
+
+
+
     var currentLocation by remember {
         mutableStateOf<Point?>(null)
+    }
+
+    var routeDistance by remember {
+        mutableStateOf<Double?>(null)
+    }
+
+    var routeDuration by remember {
+        mutableStateOf<Double?>(null)
     }
 
     var routeInfo by remember {
@@ -181,6 +198,12 @@ fun MapScreen() {
                 origin = origin,
                 destination = destination
             )
+
+            routeInfo?.let { route ->
+
+                routeDistance = route.distance
+                routeDuration = route.duration
+            }
         }
     }
 
@@ -237,6 +260,89 @@ fun MapScreen() {
                 )
             }
 
+        }
+
+        routeInfo?.let { route ->
+
+            Card(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 25.dp)
+            ) {
+
+                Column(
+                    modifier = Modifier.padding(
+                        horizontal = 20.dp,
+                        vertical = 12.dp
+                    )
+                ) {
+
+                    val distanceKm = route.distance / 1000.0
+
+                    val totalMinutes =
+                        (route.duration / 60).toInt()
+
+                    val hours =
+                        totalMinutes / 60
+
+                    val minutes =
+                        totalMinutes % 60
+
+                    Text(
+                        text = if (distanceKm >= 1) {
+                            "Distance: %.1f km".format(distanceKm)
+                        } else {
+                            "Distance: ${route.distance.toInt()} m"
+                        }
+                    )
+
+                    Text(
+                        text = if (hours > 0) {
+                            "Estimated time: ${hours}h ${minutes}m"
+                        } else {
+                            "Estimated time: ${minutes} min"
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = {
+
+                            val origin = currentLocation
+                            val destination = searchedLocation
+
+                            if (origin != null && destination != null) {
+
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("originLng", origin.longitude())
+
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("originLat", origin.latitude())
+
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("destinationLng", destination.longitude())
+
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("destinationLat", destination.latitude())
+
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("destinationName", locationName)
+
+                                navController.navigate("navigation")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Start Navigation")
+                    }
+                }
+            }
         }
 
         mapView?.let { view ->
@@ -382,7 +488,9 @@ fun MapScreen() {
 
         MapSearch(
             onLocationSelected = { point, name ->
+
                 searchedLocation = point
+                locationName = name
             },
             modifier = Modifier
                 .align(Alignment.TopStart)
