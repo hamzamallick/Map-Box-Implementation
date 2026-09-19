@@ -1,7 +1,11 @@
 package com.example.mapbox.components
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -36,8 +40,6 @@ fun MapSearch(
     modifier: Modifier = Modifier
 ) {
 
-
-
     val searchEngine = remember {
 
         SearchEngine.createSearchEngine(
@@ -50,109 +52,155 @@ fun MapSearch(
         mutableStateOf("")
     }
 
+    var searchSuggestions by remember {
+        mutableStateOf<List<SearchSuggestion>>(emptyList())
+    }
 
-    OutlinedTextField(
-        value = query,
-        onValueChange = {
-            query = it
-        },
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        placeholder = {
-            Text("Search places...")
-        },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Search"
-            )
-        },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Search
-        ),
-        keyboardActions = KeyboardActions(
-            onSearch = {
+    Column(modifier = modifier) {
 
-                if (query.isNotBlank()) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = {
+                query = it
 
-                    val searchOptions = SearchOptions(
-                        limit = 5
-                    )
-
+                if (it.isNotBlank()){
                     searchEngine.search(
-                        query,
-                        searchOptions,
+                        it,
+                        SearchOptions(
+                            limit = 5
+                        ),
                         object : SearchSuggestionsCallback {
-
                             override fun onSuggestions(
                                 suggestions: List<SearchSuggestion>,
                                 responseInfo: ResponseInfo
                             ) {
 
-                                val suggestion = suggestions.firstOrNull()
-
-                                if (suggestion != null) {
-
-                                    searchEngine.select(
-                                        suggestion,
-                                        object : SearchSelectionCallback {
-
-                                            override fun onResult(
-                                                suggestion: SearchSuggestion,
-                                                result: SearchResult,
-                                                responseInfo: ResponseInfo
-                                            ) {
-
-                                                val coordinate = result.coordinate
-
-                                                onLocationSelected(
-                                                    coordinate,
-                                                    result.name ?: "Unknown location"
-                                                )
-                                            }
-
-                                            override fun onSuggestions(
-                                                suggestions: List<SearchSuggestion>,
-                                                responseInfo: ResponseInfo
-                                            ) {
-                                            }
-
-                                            override fun onResults(
-                                                suggestion: SearchSuggestion,
-                                                results: List<SearchResult>,
-                                                responseInfo: ResponseInfo
-                                            ) {
-                                            }
-
-                                            override fun onError(
-                                                e: Exception
-                                            ) {
-                                            }
-                                        }
-                                    )
-                                }
+                                searchSuggestions = suggestions
                             }
 
                             override fun onError(
                                 e: Exception
                             ) {
+                                searchSuggestions = emptyList()
                             }
                         }
                     )
+                }else {
+
+                    searchSuggestions = emptyList()
                 }
-            }
-        ),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color.Gray,
-            unfocusedContainerColor = Color.LightGray,
-            focusedBorderColor = Color.White,
-            unfocusedBorderColor = Color.White,
-            focusedTextColor = Color.White,
-            unfocusedTextColor = Color.White,
-            focusedPlaceholderColor = Color.LightGray,
-            unfocusedPlaceholderColor = Color.LightGray
+            },
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            placeholder = {
+                Text("Search places...")
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search"
+                )
+            },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Search
+            ),
+            keyboardActions = KeyboardActions(
+                onSearch = {
+                    // Nothing
+                }
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.Gray,
+                unfocusedContainerColor = Color.LightGray,
+                focusedBorderColor = Color.White,
+                unfocusedBorderColor = Color.White,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedPlaceholderColor = Color.LightGray,
+                unfocusedPlaceholderColor = Color.LightGray
+            )
         )
-    )
+
+        searchSuggestions.forEach { suggestion ->
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 2.dp
+                    )
+                    .clickable {
+
+                        searchEngine.select(
+                            suggestion,
+                            object : SearchSelectionCallback {
+
+                                override fun onResult(
+                                    suggestion: SearchSuggestion,
+                                    result: SearchResult,
+                                    responseInfo: ResponseInfo
+                                ) {
+
+                                    val coordinate = result.coordinate
+
+                                    val name =
+                                        result.name ?: suggestion.name
+
+                                    onLocationSelected(
+                                        coordinate,
+                                        name
+                                    )
+
+                                    query = name
+
+                                    searchSuggestions =
+                                        emptyList()
+                                }
+
+                                override fun onSuggestions(
+                                    suggestions: List<SearchSuggestion>,
+                                    responseInfo: ResponseInfo
+                                ) {
+                                }
+
+                                override fun onResults(
+                                    suggestion: SearchSuggestion,
+                                    results: List<SearchResult>,
+                                    responseInfo: ResponseInfo
+                                ) {
+                                }
+
+                                override fun onError(
+                                    e: Exception
+                                ) {
+
+                                    searchSuggestions =
+                                        emptyList()
+                                }
+                            }
+                        )
+                    },
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.DarkGray
+                )
+            ) {
+
+                Text(
+                    text = suggestion.name,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    color = Color.White
+                )
+            }
+        }
+
+
+    }
+
+
+
 }
