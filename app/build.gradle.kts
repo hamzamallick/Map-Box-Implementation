@@ -70,4 +70,8 @@ dependencies {
 
     implementation("com.mapbox.search:mapbox-search-android:2.30.1")
 
+    implementation("com.mapbox.navigationcore:android:3.17.0")
+    implementation("com.mapbox.navigationcore:ui-components:3.17.0")
+
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }

@@ -14,16 +14,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import android.content.ClipData
+import com.example.mapbox.route.RouteManager
 import android.content.ClipboardManager
 import android.content.Intent
 import com.example.mapbox.components.CurrentLocationButton
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
+import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.example.mapbox.components.GetLocation
 import com.example.mapbox.components.LocationMarker
 import com.example.mapbox.model.mapStyles
 import com.mapbox.maps.extension.compose.MapEffect
@@ -46,6 +43,7 @@ import com.mapbox.maps.plugin.locationcomponent.location
 import kotlinx.coroutines.delay
 import com.example.mapbox.components.MapStyleSelector
 import com.example.mapbox.components.MyLocationButton
+import com.example.mapbox.components.RouteLine
 import com.example.mapbox.components.ZoomControls
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
@@ -61,6 +59,13 @@ fun MapScreen() {
 
     var searchedLocation by remember {
         mutableStateOf<Point?>(null)
+    }
+    var currentLocation by remember {
+        mutableStateOf<Point?>(null)
+    }
+
+    var routeInfo by remember {
+        mutableStateOf<com.example.mapbox.route.RouteInfo?>(null)
     }
 
     var locationName by remember {
@@ -114,19 +119,6 @@ fun MapScreen() {
         }
     }
 
-    LaunchedEffect(searchedLocation) {
-
-        searchedLocation?.let { point ->
-
-            mapViewportState.flyTo(
-                CameraOptions.Builder()
-                    .center(point)
-                    .zoom(15.0)
-                    .build()
-            )
-        }
-    }
-
     var hasLocationPermission by remember {
 
         mutableStateOf(
@@ -141,13 +133,56 @@ fun MapScreen() {
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permission ->
+
         hasLocationPermission =
             permission[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                     permission[Manifest.permission.ACCESS_COARSE_LOCATION] == true
     }
 
+    val routeManager = remember {
+        RouteManager(context)
+    }
+
+    LaunchedEffect(searchedLocation) {
+
+        searchedLocation?.let { point ->
+
+            mapViewportState.flyTo(
+                CameraOptions.Builder()
+                    .center(point)
+                    .zoom(15.0)
+                    .build()
+            )
+        }
+    }
 
 
+    LaunchedEffect(searchedLocation, hasLocationPermission) {
+
+        if (searchedLocation != null && !hasLocationPermission) {
+
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
+    LaunchedEffect(currentLocation, searchedLocation) {
+
+        val origin = currentLocation
+        val destination = searchedLocation
+
+        if (origin != null && destination != null) {
+
+            routeInfo = routeManager.getRoute(
+                origin = origin,
+                destination = destination
+            )
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -173,18 +208,33 @@ fun MapScreen() {
 
                 mapView = view
 
-                // for fetching the location
                 if (hasLocationPermission) {
+
                     view.location.updateSettings {
                         enabled = true
                     }
+
+                    val locationListener =
+                        OnIndicatorPositionChangedListener { point ->
+
+                            currentLocation = point
+                        }
+
+                    view.location.addOnIndicatorPositionChangedListener(
+                        locationListener
+                    )
                 }
 
-                // map style
                 view.mapboxMap.loadStyle(
                     selectedStyle.uri
                 )
+            }
 
+            routeInfo?.let { route ->
+
+                RouteLine(
+                    points = route.routeCoordinates
+                )
             }
 
         }
