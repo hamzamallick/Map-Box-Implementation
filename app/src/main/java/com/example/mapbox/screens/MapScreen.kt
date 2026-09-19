@@ -332,13 +332,15 @@ fun MapScreen() {
 
         MapSearch(
             onLocationSelected = { point, name ->
-
                 searchedLocation = point
-
             },
             modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 20.dp)
+                .align(Alignment.TopStart)
+                .padding(
+                    start = 16.dp,
+                    top = 20.dp,
+                    end = 90.dp
+                )
         )
 
 

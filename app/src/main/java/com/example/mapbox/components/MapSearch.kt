@@ -4,8 +4,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.NorthWest
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -60,21 +66,21 @@ fun MapSearch(
 
         OutlinedTextField(
             value = query,
+
             onValueChange = {
                 query = it
 
-                if (it.isNotBlank()){
+                if (it.isNotBlank()) {
+
                     searchEngine.search(
                         it,
-                        SearchOptions(
-                            limit = 5
-                        ),
+                        SearchOptions(limit = 5),
                         object : SearchSuggestionsCallback {
+
                             override fun onSuggestions(
                                 suggestions: List<SearchSuggestion>,
                                 responseInfo: ResponseInfo
                             ) {
-
                                 searchSuggestions = suggestions
                             }
 
@@ -85,53 +91,68 @@ fun MapSearch(
                             }
                         }
                     )
-                }else {
 
+                } else {
                     searchSuggestions = emptyList()
                 }
             },
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+
+            modifier = Modifier
+                .fillMaxWidth(),
+
             placeholder = {
-                Text("Search places...")
+                Text(
+                    text = "Search here",
+                    color = Color.Gray
+                )
             },
+
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Search"
+                    contentDescription = "Search",
+                    tint = Color.DarkGray
                 )
             },
+
             singleLine = true,
+
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Search
             ),
+
             keyboardActions = KeyboardActions(
                 onSearch = {
-                    // Nothing
+                    // Don't automatically select first result
                 }
             ),
+
+            shape = RoundedCornerShape(30.dp),
+
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.Gray,
-                unfocusedContainerColor = Color.LightGray,
-                focusedBorderColor = Color.White,
-                unfocusedBorderColor = Color.White,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                focusedPlaceholderColor = Color.LightGray,
-                unfocusedPlaceholderColor = Color.LightGray
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent,
+
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black,
+
+                focusedPlaceholderColor = Color.Gray,
+                unfocusedPlaceholderColor = Color.Gray,
+
+                focusedLeadingIconColor = Color.DarkGray,
+                unfocusedLeadingIconColor = Color.DarkGray
             )
         )
 
-        searchSuggestions.forEach { suggestion ->
+        searchSuggestions.forEachIndexed { index, suggestion ->
 
-            Card(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 2.dp
-                    )
+                    .background(Color.White)
                     .clickable {
 
                         searchEngine.select(
@@ -163,37 +184,81 @@ fun MapSearch(
                                 override fun onSuggestions(
                                     suggestions: List<SearchSuggestion>,
                                     responseInfo: ResponseInfo
-                                ) {
-                                }
+                                ) {}
 
                                 override fun onResults(
                                     suggestion: SearchSuggestion,
                                     results: List<SearchResult>,
                                     responseInfo: ResponseInfo
-                                ) {
-                                }
+                                ) {}
 
                                 override fun onError(
                                     e: Exception
                                 ) {
-
-                                    searchSuggestions =
-                                        emptyList()
+                                    searchSuggestions = emptyList()
                                 }
                             }
                         )
-                    },
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.DarkGray
-                )
+                    }
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 12.dp
+                    )
             ) {
 
-                Text(
-                    text = suggestion.name,
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    color = Color.White
+                        .padding(vertical = 4.dp)
+                ) {
+
+
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = Color.Gray,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .padding(8.dp)
+                    )
+
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 12.dp)
+                    ) {
+
+                        Text(
+                            text = suggestion.name,
+                            color = Color.DarkGray,
+                            fontSize = 16.sp
+                        )
+
+                        Text(
+                            text = "Search result",
+                            color = Color.Gray,
+                            fontSize = 14.sp
+                        )
+                    }
+
+
+                    Icon(
+                        imageVector = Icons.Default.NorthWest,
+                        contentDescription = "Select",
+                        tint = Color.DarkGray,
+                        modifier = Modifier
+                            .size(28.dp)
+                            .padding(4.dp)
+                    )
+                }
+            }
+
+            if (index < searchSuggestions.lastIndex) {
+
+                HorizontalDivider(
+                    color = Color.LightGray,
+                    thickness = 1.dp
                 )
             }
         }
