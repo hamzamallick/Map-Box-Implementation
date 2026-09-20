@@ -309,33 +309,17 @@ fun MapScreen(
                     Button(
                         onClick = {
 
-                            val origin = currentLocation
-                            val destination = searchedLocation
+                            if (currentLocation != null &&
+                                searchedLocation != null
+                            ) {
 
-                            if (origin != null && destination != null) {
-
-                                navController.currentBackStackEntry
-                                    ?.savedStateHandle
-                                    ?.set("originLng", origin.longitude())
-
-                                navController.currentBackStackEntry
-                                    ?.savedStateHandle
-                                    ?.set("originLat", origin.latitude())
-
-                                navController.currentBackStackEntry
-                                    ?.savedStateHandle
-                                    ?.set("destinationLng", destination.longitude())
-
-                                navController.currentBackStackEntry
-                                    ?.savedStateHandle
-                                    ?.set("destinationLat", destination.latitude())
-
-                                navController.currentBackStackEntry
-                                    ?.savedStateHandle
-                                    ?.set("destinationName", locationName)
-
-                                navController.navigate("navigation")
+                                Toast.makeText(
+                                    context,
+                                    "Navigation started",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
+
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
