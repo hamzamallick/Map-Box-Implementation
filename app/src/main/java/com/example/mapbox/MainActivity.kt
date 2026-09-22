@@ -28,12 +28,9 @@ class MainActivity : ComponentActivity() {
                 startDestination = "home"
             ) {
 
-
                 composable("home") {
-
                     HomeScreen(
                         onOpenMap = {
-
                             navController.navigate(
                                 "map"
                             )
@@ -41,18 +38,11 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-
-
-
                 composable("map") {
-
                     MapScreen(
                         navController = navController
                     )
                 }
-
-
-
             }
         }
     }

@@ -34,24 +34,15 @@ fun GetLocation(
 
     DisposableEffect(mapView) {
 
-        // SINGLE CLICK
         val clickListener = OnMapClickListener { point ->
-
             Log.d(
                 "GetLocation",
                 "MAP CLICK: ${point.latitude()}, ${point.longitude()}"
             )
-
-            // Hide the location card
             onLocationCleared()
-
-            // VERY IMPORTANT
-            // false means don't consume the click
             false
         }
 
-
-        // LONG PRESS
         val longClickListener = OnMapLongClickListener { point ->
 
             Log.d(
@@ -59,13 +50,11 @@ fun GetLocation(
                 "MAP LONG CLICK: ${point.latitude()}, ${point.longitude()}"
             )
 
-            // Show coordinates immediately
             onLocationSelected(
                 point,
                 "Getting location..."
             )
 
-            // Reverse geocoding
             val options = ReverseGeoOptions(
                 center = point,
                 limit = 1
@@ -79,26 +68,19 @@ fun GetLocation(
                         results: List<SearchResult>,
                         responseInfo: ResponseInfo
                     ) {
-
                         if (results.isNotEmpty()) {
-
                             val result = results[0]
-
                             val locationName =
                                 result.name ?: "Unknown location"
-
                             Log.d(
                                 "GetLocation",
                                 "Location: $locationName"
                             )
-
                             onLocationSelected(
                                 point,
                                 locationName
                             )
-
                         } else {
-
                             onLocationSelected(
                                 point,
                                 "Location not found"
@@ -121,31 +103,21 @@ fun GetLocation(
                     }
                 }
             )
-
-            // IMPORTANT
             true
         }
 
-
-        // REGISTER SINGLE CLICK
         mapView.gestures.addOnMapClickListener(
             clickListener
         )
 
-
-        // REGISTER LONG CLICK
         mapView.gestures.addOnMapLongClickListener(
             longClickListener
         )
 
-
-        // REMOVE LISTENERS
         onDispose {
-
             mapView.gestures.removeOnMapClickListener(
                 clickListener
             )
-
             mapView.gestures.removeOnMapLongClickListener(
                 longClickListener
             )

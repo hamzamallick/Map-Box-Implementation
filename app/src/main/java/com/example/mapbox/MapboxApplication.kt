@@ -16,9 +16,7 @@ class MapboxApplication : Application() {
             getString(R.string.mapbox_access_token)
 
         if (!MapboxNavigationApp.isSetup()) {
-
             MapboxNavigationApp.setup {
-
                 NavigationOptions.Builder(this)
                     .build()
             }

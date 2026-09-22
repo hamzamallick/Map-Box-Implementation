@@ -25,7 +25,6 @@ fun HomeScreen(onOpenMap: () -> Unit) {
         verticalArrangement = Arrangement.Center
     ) {
 
-
         Text("Click button to explore the world..!")
 
         Spacer(Modifier.height(40.dp))

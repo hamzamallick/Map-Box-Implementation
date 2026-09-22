@@ -67,10 +67,12 @@ fun MapScreen(
         mutableStateOf<Point?>(null)
     }
 
-
-
     var currentLocation by remember {
         mutableStateOf<Point?>(null)
+    }
+
+    var isNavigating by remember {
+        mutableStateOf(false)
     }
 
     var routeDistance by remember {
@@ -93,7 +95,6 @@ fun MapScreen(
         mutableStateOf<MapView?>(null)
     }
 
-
     var selectedStyle by remember {
         mutableStateOf(mapStyles[0])
     }
@@ -107,7 +108,6 @@ fun MapScreen(
     }
 
     LaunchedEffect(backPressedOnce) {
-
         if (backPressedOnce) {
             delay(2000)
             backPressedOnce = false
@@ -115,16 +115,11 @@ fun MapScreen(
     }
 
     BackHandler {
-
         if (backPressedOnce) {
-
-            //exit the app
             (context as? Activity)?.finishAffinity()
         } else {
             backPressedOnce = true
-
             Toast.makeText(context, "Press back once again to exit", Toast.LENGTH_SHORT).show()
-
         }
     }
 
@@ -137,20 +132,17 @@ fun MapScreen(
     }
 
     var hasLocationPermission by remember {
-
         mutableStateOf(
             ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         )
-
     }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permission ->
-
         hasLocationPermission =
             permission[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                     permission[Manifest.permission.ACCESS_COARSE_LOCATION] == true
@@ -161,9 +153,7 @@ fun MapScreen(
     }
 
     LaunchedEffect(searchedLocation) {
-
         searchedLocation?.let { point ->
-
             mapViewportState.flyTo(
                 CameraOptions.Builder()
                     .center(point)
@@ -175,9 +165,7 @@ fun MapScreen(
 
 
     LaunchedEffect(searchedLocation, hasLocationPermission) {
-
         if (searchedLocation != null && !hasLocationPermission) {
-
             permissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
@@ -188,19 +176,14 @@ fun MapScreen(
     }
 
     LaunchedEffect(currentLocation, searchedLocation) {
-
         val origin = currentLocation
         val destination = searchedLocation
-
         if (origin != null && destination != null) {
-
             routeInfo = routeManager.getRoute(
                 origin = origin,
                 destination = destination
             )
-
             routeInfo?.let { route ->
-
                 routeDistance = route.distance
                 routeDuration = route.duration
             }
@@ -208,7 +191,6 @@ fun MapScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-
 
         MapboxMap(
             Modifier.fillMaxSize(),
@@ -226,8 +208,11 @@ fun MapScreen(
             }
 
         ) {
-
-            MapEffect(hasLocationPermission, selectedStyle) { view ->
+            MapEffect(
+                hasLocationPermission,
+                selectedStyle,
+                isNavigating
+            ) { view ->
 
                 mapView = view
 
@@ -239,27 +224,30 @@ fun MapScreen(
 
                     val locationListener =
                         OnIndicatorPositionChangedListener { point ->
-
                             currentLocation = point
+                            if (isNavigating) {
+                                mapViewportState.flyTo(
+                                    CameraOptions.Builder()
+                                        .center(point)
+                                        .zoom(17.0)
+                                        .build()
+                                )
+                            }
                         }
-
                     view.location.addOnIndicatorPositionChangedListener(
                         locationListener
                     )
                 }
-
                 view.mapboxMap.loadStyle(
                     selectedStyle.uri
                 )
             }
 
             routeInfo?.let { route ->
-
                 RouteLine(
                     points = route.routeCoordinates
                 )
             }
-
         }
 
         routeInfo?.let { route ->
@@ -289,18 +277,42 @@ fun MapScreen(
                         totalMinutes % 60
 
                     Text(
-                        text = if (distanceKm >= 1) {
-                            "Distance: %.1f km".format(distanceKm)
+                        text = if (isNavigating) {
+                            "Remaining: ${
+                                if (distanceKm >= 1) {
+                                    "%.1f km".format(distanceKm)
+                                } else {
+                                    "${route.distance.toInt()} m"
+                                }
+                            }"
                         } else {
-                            "Distance: ${route.distance.toInt()} m"
+                            "Distance: ${
+                                if (distanceKm >= 1) {
+                                    "%.1f km".format(distanceKm)
+                                } else {
+                                    "${route.distance.toInt()} m"
+                                }
+                            }"
                         }
                     )
 
                     Text(
-                        text = if (hours > 0) {
-                            "Estimated time: ${hours}h ${minutes}m"
+                        text = if (isNavigating) {
+                            "Remaining time: ${
+                                if (hours > 0) {
+                                    "${hours}h ${minutes}m"
+                                } else {
+                                    "${minutes} min"
+                                }
+                            }"
                         } else {
-                            "Estimated time: ${minutes} min"
+                            "Estimated time: ${
+                                if (hours > 0) {
+                                    "${hours}h ${minutes}m"
+                                } else {
+                                    "${minutes} min"
+                                }
+                            }"
                         }
                     )
 
@@ -308,47 +320,44 @@ fun MapScreen(
 
                     Button(
                         onClick = {
-
-                            if (currentLocation != null &&
-                                searchedLocation != null
-                            ) {
-
+                            if (currentLocation != null && searchedLocation != null) {
+                                isNavigating = true
                                 Toast.makeText(
                                     context,
                                     "Navigation started",
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
-
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Start Navigation")
+                        Text(
+                            if (isNavigating) {
+                                "Navigation Started"
+                            } else {
+                                "Start Navigation"
+                            }
+                        )
                     }
                 }
             }
         }
 
         mapView?.let { view ->
-
             searchedLocation?.let { point ->
-
                 LocationMarker(
                     mapView = view,
                     point = point,
                     onMarkerClick = {
-
                     }
                 )
             }
         }
 
         mapView?.let { view ->
-
             GetLocation(
                 mapView = view,
                 onLocationSelected = { point, name ->
-
                     selectedLocation = point
                     locationName = name
                 },
@@ -360,14 +369,11 @@ fun MapScreen(
         }
 
         mapView?.let { view ->
-
             selectedLocation?.let { point ->
-
                 LocationMarker(
                     mapView = view,
                     point = point,
                     onMarkerClick = {
-
                         selectedLocation = point
                     }
                 )
@@ -406,7 +412,6 @@ fun MapScreen(
                         val mapLink =
                             "https://www.google.com/maps/search/?api=1&query=$latitude,$longitude"
 
-
                         val clipboard =
                             context.getSystemService(
                                 android.content.Context.CLIPBOARD_SERVICE
@@ -426,9 +431,7 @@ fun MapScreen(
                             Toast.LENGTH_SHORT
                         ).show()
 
-
                     }) {
-
                         Text("Copy Location Link")
                     }
 
@@ -463,7 +466,6 @@ fun MapScreen(
                             )
                         }
                     ) {
-
                         Text("Share Location")
                     }
                 }
@@ -485,15 +487,12 @@ fun MapScreen(
                 )
         )
 
-
-
         ZoomControls(
             mapViewportState = mapViewportState,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(bottom = 150.dp, end = 20.dp)
         )
-
 
         MapStyleSelector(
             mapStyle = mapStyles,
@@ -512,7 +511,6 @@ fun MapScreen(
                     top = 40.dp
                 )
         )
-
 
         MyLocationButton(
             hasLocationPermission = hasLocationPermission,
@@ -534,12 +532,5 @@ fun MapScreen(
                     end = 20.dp
                 )
         )
-
-
     }
-
-
 }
-
-
-// yaha tk hua
