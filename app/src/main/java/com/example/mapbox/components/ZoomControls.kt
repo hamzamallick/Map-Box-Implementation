@@ -32,7 +32,7 @@ fun ZoomControls(
         {
 
 
-            Icon(Icons.Default.Add, contentDescription = "")
+            Icon(Icons.Default.Add, contentDescription = "zoom in")
         }
 
         FloatingActionButton(onClick = {
@@ -43,7 +43,7 @@ fun ZoomControls(
             }
         })
         {
-            Icon(Icons.Default.Remove, contentDescription = "")
+            Icon(Icons.Default.Remove, contentDescription = "zoom out")
         }
     }
 }
