@@ -75,6 +75,14 @@ fun MapScreen(
         mutableStateOf(false)
     }
 
+    var lastNavigationUpdate by remember {
+        mutableStateOf<Point?>(null)
+    }
+
+    var lastNavigationLocation by remember {
+        mutableStateOf<Point?>(null)
+    }
+
     var routeDistance by remember {
         mutableStateOf<Double?>(null)
     }
@@ -175,17 +183,54 @@ fun MapScreen(
         }
     }
 
-    LaunchedEffect(currentLocation, searchedLocation) {
+    LaunchedEffect(currentLocation, searchedLocation, isNavigating) {
+
         val origin = currentLocation
         val destination = searchedLocation
+
         if (origin != null && destination != null) {
-            routeInfo = routeManager.getRoute(
-                origin = origin,
-                destination = destination
-            )
-            routeInfo?.let { route ->
-                routeDistance = route.distance
-                routeDuration = route.duration
+
+            val shouldUpdateRoute =
+                if (!isNavigating) {
+
+                    true
+
+                } else {
+
+                    val lastLocation =
+                        lastNavigationLocation
+
+                    lastLocation == null ||
+                            distanceBetween(
+                                lastLocation,
+                                origin
+                            ) >= 50.0
+                }
+
+            if (shouldUpdateRoute) {
+
+                val newRoute =
+                    routeManager.getRoute(
+                        origin = origin,
+                        destination = destination
+                    )
+
+                if (newRoute != null) {
+
+                    routeInfo = newRoute
+
+                    routeDistance =
+                        newRoute.distance
+
+                    routeDuration =
+                        newRoute.duration
+
+                    if (isNavigating) {
+
+                        lastNavigationLocation =
+                            origin
+                    }
+                }
             }
         }
     }
@@ -533,4 +578,22 @@ fun MapScreen(
                 )
         )
     }
+}
+
+fun distanceBetween(
+    point1: Point,
+    point2: Point
+): Double {
+
+    val results = FloatArray(1)
+
+    android.location.Location.distanceBetween(
+        point1.latitude(),
+        point1.longitude(),
+        point2.latitude(),
+        point2.longitude(),
+        results
+    )
+
+    return results[0].toDouble()
 }
